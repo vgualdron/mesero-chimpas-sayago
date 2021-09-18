@@ -111,7 +111,7 @@ function printCommand($mesa, $productos, $printerName) {
         $printer->setEmphasis(true);
         /*Alinear a la izquierda para la cantidad y el nombre*/
         $printer->setJustification(Printer::JUSTIFY_LEFT);
-        $printer->text("  ".$producto["cantidadproducto"]. "   ".strtr( $producto["descripcionproducto"], $unwanted_array ). "\n");
+        $printer->text("  ".$producto["cantidadproducto"]. "  - ".strtr( $producto["descripciontipoproducto"], $unwanted_array ). "  - ".strtr( $producto["descripcionproducto"], $unwanted_array ). "\n");
         if (!empty($producto["descripcion"])) {
           $printer->text("       ".strtr($producto["descripcion"], $unwanted_array ). "\n");   
         }
