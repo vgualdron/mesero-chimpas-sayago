@@ -141,9 +141,9 @@ try {
       if ($numerofactura > 0) {
       	$bandera = true;
       } else if ($tipoPago == "TARJETA") {
-	$bandera = true;
+	      $bandera = true;
       } else if (!empty($nombreCliente) && !empty($direccionCliente) && !empty($telefonoCliente)) {
-	$bandera = true;
+	      $bandera = true;
       } else if ($facturar == "SI") {
         $bandera = true;
       } else {
@@ -151,11 +151,11 @@ try {
       }
 
       if ($numerofactura < 1 && $bandera == true) {
-	$sql = $conexion->prepare(" select 
-				 ((COALESCE(max(pedi_numerofactura), 0)) + 1) as numerofactura,
-				 (select paan_valor from pinchetas_general.parametroano paan where paan_descripcion = ?) as prefijofactura
-				 from pinchetas_restaurante.pedido
-				 where pedi_prefijofactura = (select paan_valor from pinchetas_general.parametroano paan where paan_descripcion = ?);");
+	      $sql = $conexion->prepare(" select 
+          ((COALESCE(max(pedi_numerofactura), 0)) + 1) as numerofactura,
+          (select paan_valor from pinchetas_general.parametroano paan where paan_descripcion = ?) as prefijofactura
+          from pinchetas_restaurante.pedido
+          where pedi_prefijofactura = (select paan_valor from pinchetas_general.parametroano paan where paan_descripcion = ?);");
                     							
         $sql->bindValue(1, 'PREFIJO_CAJA');
         $sql->bindValue(2, 'PREFIJO_CAJA');
@@ -167,48 +167,45 @@ try {
         $prefijofactura = $result['prefijofactura'];
       }
 	
-	
-      
-
       if ($idestado == '7') {
           
-          $sql = "CALL enviar_a_facturado_el_pedido(?,?,?,?); ";
-            
-          $sql = $conexion->prepare($sql);
-          $sql->bindValue(1, $id);
-          $sql->bindValue(2, $idestado);
-          $sql->bindValue(3, $registradopor);
-          $sql->bindValue(4, $date);
+        $sql = "CALL enviar_a_facturado_el_pedido(?,?,?,?); ";
+          
+        $sql = $conexion->prepare($sql);
+        $sql->bindValue(1, $id);
+        $sql->bindValue(2, $idestado);
+        $sql->bindValue(3, $registradopor);
+        $sql->bindValue(4, $date);
 
-	  $result = $sql->execute();
+        $result = $sql->execute();
 
-	  $sql = "UPDATE pinchetas_restaurante.pedido 
-              SET espe_id = ?, pedi_registradopor = ?, pedi_fechacambio = ?,
-				    pedi_nombrecliente = ?,
-				    pedi_direccioncliente = ?,
-				    pedi_telefonocliente = ?,
-				    pedi_tipopago = ?,
-				    pedi_bandera = ?,
-				    pedi_numerofactura = ?,
-				    pedi_prefijofactura	= ?,
-				    mesa_id = ?
-              WHERE pedi_id = ?; ";
-            
-          $sql = $conexion->prepare($sql);
-          $sql->bindValue(1, $idestado);
-          $sql->bindValue(2, $registradopor);
-          $sql->bindValue(3, $date);
-          $sql->bindValue(4, $nombreCliente);
-	  $sql->bindValue(5, $direccionCliente);
-	  $sql->bindValue(6, $telefonoCliente);
-          $sql->bindValue(7, $tipoPago);
-          $sql->bindValue(8, $bandera);
-          $sql->bindValue(9, $numerofactura);
-          $sql->bindValue(10, $prefijofactura);
-          $sql->bindValue(11, $idmesa);
-          $sql->bindValue(12, $id);
+        $sql = "UPDATE pinchetas_restaurante.pedido 
+                  SET espe_id = ?, pedi_registradopor = ?, pedi_fechacambio = ?,
+                pedi_nombrecliente = ?,
+                pedi_direccioncliente = ?,
+                pedi_telefonocliente = ?,
+                pedi_tipopago = ?,
+                pedi_bandera = ?,
+                pedi_numerofactura = ?,
+                pedi_prefijofactura	= ?,
+                mesa_id = ?
+                  WHERE pedi_id = ?; ";
+                
+        $sql = $conexion->prepare($sql);
+        $sql->bindValue(1, $idestado);
+        $sql->bindValue(2, $registradopor);
+        $sql->bindValue(3, $date);
+        $sql->bindValue(4, $nombreCliente);
+        $sql->bindValue(5, $direccionCliente);
+        $sql->bindValue(6, $telefonoCliente);
+        $sql->bindValue(7, $tipoPago);
+        $sql->bindValue(8, $bandera);
+        $sql->bindValue(9, $numerofactura);
+        $sql->bindValue(10, $prefijofactura);
+        $sql->bindValue(11, $idmesa);
+        $sql->bindValue(12, $id);
 
- 	  $result = $sql->execute();
+        $result = $sql->execute();
       } else {
            $sql = "UPDATE pinchetas_restaurante.pedido 
               SET espe_id = ?, pedi_registradopor = ?, pedi_fechacambio = ?,
@@ -227,18 +224,17 @@ try {
           $sql->bindValue(2, $registradopor);
           $sql->bindValue(3, $date);
           $sql->bindValue(4, $nombreCliente);
-	  $sql->bindValue(5, $direccionCliente);
-	  $sql->bindValue(6, $telefonoCliente);
+          $sql->bindValue(5, $direccionCliente);
+          $sql->bindValue(6, $telefonoCliente);
           $sql->bindValue(7, $tipoPago);
           $sql->bindValue(8, $bandera);
           $sql->bindValue(9, $numerofactura);
           $sql->bindValue(10, $prefijofactura);
-	  $sql->bindValue(11, $idmesa);
+	        $sql->bindValue(11, $idmesa);
           $sql->bindValue(12, $id);
 
           $result = $sql->execute();
       }
-      
       
       if($result) {
         $input['id'] = $result;
