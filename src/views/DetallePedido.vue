@@ -207,6 +207,28 @@
 
     <b-modal v-if="objeto" centered v-model="showModal" :title="tipoOperacion">
       <b-container>
+        <b-form-checkbox
+          v-model="isPizza"
+          name="checkbox-is-pizza"
+          :v-model="isPizza"
+          :unchecked-value="false"
+          class="mb-3"
+        >
+          ¿ Es Pizza ?
+        </b-form-checkbox>
+        <template v-if="isPizza">
+          <b-form-group label="Tamaño">
+            <b-form-radio-group
+                id="radio-group-2"
+                v-model="sizePizza"
+                name="radio-sub-component"
+              >
+              <b-form-radio name="some-radios" value="GRANDE">GRANDE</b-form-radio>
+              <b-form-radio name="some-radios" value="PEQUEÑA">PEQUEÑA</b-form-radio>
+              <b-form-radio name="some-radios" value="PORCIÓN">PORCIÓN</b-form-radio>
+            </b-form-radio-group>
+          </b-form-group>
+        </template>
         <b-row class="mb-3">
           <b-col
             class="text-left">
@@ -217,7 +239,7 @@
               {{objeto.descripciontipoproducto}}
             </span>
             <b-form-select v-else v-model="objeto.idtipoproducto" class="mb-3">
-              <option :key="'tipo_' + t" v-for="(tipo, t) in tipoProductos" :value="tipo.id">{{tipo.descripcion}}</option>
+              <option :key="'tipo_' + t" v-for="(tipo, t) in filtrarTipoProductos(tipoProductos)" :value="tipo.id">{{tipo.descripcion}}</option>
             </b-form-select>
           </b-col>
         </b-row>
@@ -257,12 +279,11 @@
             <span v-if="(tipoOperacion === 'Ver' || tipoOperacion === 'Eliminar')">
               {{objeto.cantidadproducto}}
             </span>
-            <b-form-input
-              v-else
-              type="number"
-              required
-              v-model="objeto.cantidadproducto"
-              class="form-control"/>
+              <b-form-select
+                v-else
+                v-model="objeto.cantidadproducto"
+                :options="options">
+              </b-form-select>
           </b-col>
         </b-row>
         <b-row class="mb-3">
@@ -367,6 +388,12 @@ export default {
           tdClass: "columna-centrada"
         },
         {
+          key: "descripciontipoproducto",
+          label: "Tipo producto",
+          sortable: true,
+          thStyle: "text-align:center;"
+        },
+        {
           key: "descripcionproducto",
           label: "Producto",
           sortable: true,
@@ -394,7 +421,32 @@ export default {
       idMesaNueva: null,
       mesasDisponibles: [],
       nombreCliente: null,
-      asociarCliente: false
+      asociarCliente: false,
+      isPizza: true,
+      sizePizza: 'GRANDE',
+      options: [
+        { value: '0.5', text: '1/2' },
+        { value: '1', text: '1' },
+        { value: '2', text: '2' },
+        { value: '3', text: '3' },
+        { value: '4', text: '4' },
+        { value: '5', text: '5' },
+        { value: '6', text: '6' },
+        { value: '7', text: '7' },
+        { value: '8', text: '8' },
+        { value: '9', text: '9' },
+        { value: '10', text: '10' },
+        { value: '11', text: '11' },
+        { value: '12', text: '12' },
+        { value: '13', text: '13' },
+        { value: '14', text: '14' },
+        { value: '15', text: '15' },
+        { value: '16', text: '16' },
+        { value: '17', text: '17' },
+        { value: '18', text: '18' },
+        { value: '19', text: '19' },
+        { value: '20', text: '20' }
+      ]
     };
   },
   watch: {
@@ -423,6 +475,14 @@ export default {
     }
   },
   methods: {
+    filtrarTipoProductos(tipoProductos) {
+      const textFilter = 'PIZZA';
+      const sizeFilter = this.sizePizza;
+      const condicion = this.isPizza ? true :  false;
+      return tipoProductos.filter((tipoProducto) => {
+        return (tipoProducto.descripcion.includes(textFilter) === condicion) && (tipoProducto.descripcion.includes(sizeFilter) === condicion);
+      });
+    },
     atras: function() {
       this.$router.go(-1)
     },
@@ -482,7 +542,7 @@ export default {
         this.$toast.error("Debe seleccionar un producto.");
         return false;
       }
-      if (!this.objeto.cantidadproducto || this.objeto.cantidadproducto < 1) {
+      if (!this.objeto.cantidadproducto || this.objeto.cantidadproducto <= 0) {
         this.$toast.error("Debe de escribir la cantidad.");
         return false;
       }
@@ -919,7 +979,7 @@ export default {
       var self = this;
       self.$set(self.objeto, "token", window.localStorage.getItem("token"));
       self.$set(self.objeto, "idpedido", this.pedido.id);
-      self.$set(self.objeto, "cantidadproductosumar", (parseInt(self.cantidadProductoVieja) - parseInt(self.objeto.cantidadproducto)));
+      self.$set(self.objeto, "cantidadproductosumar", (parseFloat(self.cantidadProductoVieja) - parseFloat(self.objeto.cantidadproducto)));
       self.$set(self.objeto, "productoviejo", this.objetoViejo);
       self.$set(self.objeto, "mesa", this.mesa);
       self.$set(self.objeto, "pedido", this.pedido);
@@ -1042,7 +1102,7 @@ export default {
       var self = this;
       var total = 0;
       this.items.forEach(item => {
-        total += (parseInt(item.precioproducto) * parseInt(item.cantidadproducto));
+        total += (parseInt(item.precioproducto) * parseFloat(item.cantidadproducto));
       });
       var total = '$' + Number(total.toFixed(1)).toLocaleString();
       return total;
