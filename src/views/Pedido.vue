@@ -10,7 +10,7 @@
           <b-row class="mt-1 mb-2">
             <b-col cols="12">
               <b-row v-if="items.length > 0">
-                <b-col cols="6" sm="6" lg="3"  v-for="item in items" :key="'mesa_' + item.id" class="mesa">
+                <b-col cols="6" sm="6" lg="2"  v-for="item in items" :key="'mesa_' + item.id" class="mesa">
                   <b-card border-variant="primary"
                     header-bg-variant="primary"
                     align="center" 

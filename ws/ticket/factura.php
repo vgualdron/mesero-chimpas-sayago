@@ -36,8 +36,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     echo $mesa['descripcion'];
     $numeroMesa = substr($mesa['descripcion'], 4);
     echo $numeroMesa;
-    if ($numeroMesa >= 22 && $numeroMesa <= 45) {
-        printInvoice($frm, 'SEGUNDO-PISO-PRINTER');
+    if ($numeroMesa >= 25 && $numeroMesa <= 45) {
+        printInvoice($frm, 'SEGUNDO-PISO-PRINT');
     } else {
         printInvoice($frm, 'POS-80');
     }

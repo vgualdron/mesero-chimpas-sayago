@@ -531,8 +531,10 @@ export default {
           precioproducto: obj.precioproducto,
           descripcion: obj.descripcion
         };
+
         this.objetoViejo = {
-          ...this.objeto
+          ...this.objeto,
+          descripciontipoproducto: descripcionTipoProducto
         }
       }
       this.showModal = true;

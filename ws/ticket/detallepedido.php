@@ -8,6 +8,9 @@ use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
 
 date_default_timezone_set('America/Bogota');
 
+require_once("../conexion.php");
+require_once("../encrypted.php");
+
 function printCommand($frm, $type) {
     $producto = $frm;
     $mesa = $frm['mesa'];
@@ -26,12 +29,13 @@ function printCommand($frm, $type) {
     if ($idTipoProducto == 6) {
         $flagKiosko = true;
     }
-    if ($flagBebidas) {
+    /* if ($flagBebidas) {
         printTicket($mesa, $producto, $pedido, $type, "BEBIDAS-PRINTER");
     }
     if ($flagKiosko) {
         printTicket($mesa, $producto, $pedido, $type, "KIOSCO-PRINTER");
-    }
+    } */
+    printTicket($mesa, $producto, $pedido, $type, "COMANDAS-PRINTER");
     printTicket($mesa, $producto, $pedido, $type, "POS-80");
 }
 
@@ -41,6 +45,17 @@ function printTicket($mesa, $producto, $pedido, $type, $printerName) {
         'Ú'=>'U', 'Û'=>'U', 'Ü'=>'U', 'Ý'=>'Y', 'Þ'=>'B', 'ß'=>'Ss', 'à'=>'a', 'á'=>'a', 'â'=>'a', 'ã'=>'a', 'ä'=>'a', 'å'=>'a', 'æ'=>'a', 'ç'=>'c',
         'è'=>'e', 'é'=>'e', 'ê'=>'e', 'ë'=>'e', 'ì'=>'i', 'í'=>'i', 'î'=>'i', 'ï'=>'i', 'ð'=>'o', 'ñ'=>'n', 'ò'=>'o', 'ó'=>'o', 'ô'=>'o', 'õ'=>'o',
         'ö'=>'o', 'ø'=>'o', 'ù'=>'u', 'ú'=>'u', 'û'=>'u', 'ý'=>'y', 'þ'=>'b', 'ÿ'=>'y' );
+
+    $conexion = new Conexion();
+    $conexion->query("SET NAMES 'utf8';");
+    $use = $conexion->prepare(" SELECT * FROM pinchetas_restaurante.tipoproducto tipr
+    WHERE tipr.tipr_id = ?; ");
+
+    $use->bindValue(1, $producto["idtipoproducto"]);
+    $use ->execute();
+    $row = $use->fetch();
+    $descripcionTipoProducto = $row['tipr_descripcion'];
+    $producto["descripciontipoproducto"] = $descripcionTipoProducto;
 
     $nombre_impresora = $printerName;
 
@@ -82,7 +97,7 @@ function printTicket($mesa, $producto, $pedido, $type, $printerName) {
         $printer->setJustification(Printer::JUSTIFY_LEFT);
         $printer->setTextSize(1,1);
         $printer->setEmphasis(true);
-        $printer->text("  ".$productoViejo["cantidadproducto"]. "   ".strtr( $productoViejo["descripcionproducto"], $unwanted_array ). "\n");
+        $printer->text("  ".$productoViejo["cantidadproducto"]. "  - ".strtr( $productoViejo["descripciontipoproducto"], $unwanted_array ). "  - ".strtr( $productoViejo["descripcionproducto"], $unwanted_array ). "\n");
         if (!empty($productoViejo["descripcion"])) {
             $printer->text("       ".strtr($productoViejo["descripcion"], $unwanted_array ). "\n");   
         }
@@ -97,7 +112,7 @@ function printTicket($mesa, $producto, $pedido, $type, $printerName) {
     $printer->setEmphasis(true);
     /*Alinear a la izquierda para la cantidad y el nombre*/
     $printer->setJustification(Printer::JUSTIFY_LEFT);
-    $printer->text("  ".$producto["cantidadproducto"]. "   ".strtr( $producto["descripcionproducto"], $unwanted_array ). "\n");
+    $printer->text("  ".$producto["cantidadproducto"]. "  - ".strtr( $producto["descripciontipoproducto"], $unwanted_array ). "  - ".strtr( $producto["descripcionproducto"], $unwanted_array ). "\n");
     if (!empty($producto["descripcion"])) {
         $printer->text("       ".strtr($producto["descripcion"], $unwanted_array ). "\n");   
     }
@@ -108,7 +123,7 @@ function printTicket($mesa, $producto, $pedido, $type, $printerName) {
     $printer->selectPrintMode();
    
     $printer->setJustification(Printer::JUSTIFY_RIGHT);
-    $printer->text("Pinchetas.\n");
+    $printer->text("Chimpas pizza.\n");
 
     $printer->feed(1);
     $printer->cut();

@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if ($flagKiosko) {
         printCommand($mesa, $productos, "KIOSCO-PRINTER");
     } */
-    printCommand($mesa, $productos, "POS-80");
+    printCommand($mesa, $productos, "COMANDAS-PRINTER");
 }
 
 function printCommand($mesa, $productos, $printerName) {
@@ -129,7 +129,7 @@ function printCommand($mesa, $productos, $printerName) {
         Podemos poner también un pie de página
     */
     $printer->setJustification(Printer::JUSTIFY_RIGHT);
-    $printer->text("Pinchetas.\n");
+    $printer->text("Chimpas pizza.\n");
 
 
 

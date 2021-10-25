@@ -56,6 +56,7 @@ if ($count > 0) {
 
                 $objChildren->id =  $registro2['prod_id'];
                 $objChildren->idtipoproducto =  $registro2['tipr_id'];
+                $objChildren->descripciontipoproducto =  $registro['tipr_descripcion'];
                 $objChildren->descripcion =  $registro2['prod_descripcion'];
                 $objChildren->orden =  $registro2['prod_orden'];
                 $objChildren->costo =  $registro2['prod_costo'];
