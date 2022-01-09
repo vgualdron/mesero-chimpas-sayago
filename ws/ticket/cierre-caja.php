@@ -102,42 +102,23 @@ $fecha = date("Y-m-d");
 $hora = date("H:i:s");
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $productos = $frm['items'];
+    $tiposProducto = $frm['items'];
 	$gastos = $frm['gastos'];
     $fecha = $frm['fecha'];
+    $totalEfectivo = $frm['totalEfectivo'];
+    $totalTarjeta = $frm['totalTarjeta'];
 	$titulo = $frm['titulo'];
-    /*
-        Aquí, en lugar de "POS-58" (que es el nombre de mi impresora)
-        escribe el nombre de la tuya. Recuerda que debes compartirla
-        desde el panel de control
-    */
-
+  
     $nombre_impresora = "POS-80"; 
 
 
     $connector = new WindowsPrintConnector($nombre_impresora);
     $printer = new Printer($connector);
 
-
-    /*
-        Vamos a imprimir un logotipo
-        opcional. Recuerda que esto
-        no funcionará en todas las
-        impresoras
-
-        Pequeña nota: Es recomendable que la imagen no sea
-        transparente (aunque sea png hay que quitar el canal alfa)
-        y que tenga una resolución baja. En mi caso
-        la imagen que uso es de 250 x 250
-    */
-
     # Vamos a alinear al centro lo próximo que imprimamos
     $printer->setJustification(Printer::JUSTIFY_CENTER);
 
-    /*
-        Intentaremos cargar e imprimir
-        el logo
-    */
+   
     try{
         $logo = EscposImage::load("logo_banner_menu_minimized.jpg", false);
         $printer->bitImage($logo);
@@ -168,27 +149,40 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	$printer->text("------------------------------------------------\n");
 	$printer->feed(1);
 	$printer->setJustification(Printer::JUSTIFY_CENTER);
+    $printer->setEmphasis(true);
 	$printer->text("INGRESOS\n");
 	$printer->feed(1);
-    $printer->setEmphasis(true);
-    $printer->text("CANT                DESCRIPCION           TOTAL\n");
-    $printer->selectPrintMode();
-    $printer->text("------------------------------------------------\n");
-    
+   
    
     $total = 0;
 	$totalVentas = 0;
-    foreach ($productos as $clave => $producto) {
-        $total = $producto["cantidad"] * $producto["prod_precio"];
-		$totalVentas += $total;
-        /*Alinear a la izquierda para la cantidad y el nombre*/
-        $printer->setJustification(Printer::JUSTIFY_LEFT);
-        $printer->text("  ".substr($producto["cantidad"],0,22). "   ".strtr( $producto["prod_descripcion"], $unwanted_array ). "\n");
 
-        /*Y a la derecha para el importe*/
-        $printer->setJustification(Printer::JUSTIFY_RIGHT);$printer->text(' $' . number_format($total, 0, ',', '.') ."\n");
+    foreach ($tiposProducto as $clave => $tipoProducto) {
 		$printer->text("- - - - - - - - - - - - - - - - - - - - - - - -\n");
+        $printer->setJustification(Printer::JUSTIFY_CENTER);
+        $printer->setEmphasis(true);
+        $printer->text(strtr( $tipoProducto["descripcion"], $unwanted_array ). "\n");
+        $printer->text("CANT                DESCRIPCION           TOTAL\n");
+        $printer->selectPrintMode();
+        foreach ($tipoProducto["productos"] as $clave => $producto) {
+            $total = $producto["totalT"];
+            $totalVentas += $total;
+            /*Alinear a la izquierda para la cantidad y el nombre*/
+            $printer->setJustification(Printer::JUSTIFY_LEFT);
+            $printer->text("  ".substr($producto["cantidadT"],0,22). "   ".strtr( $producto["descripcion"], $unwanted_array ). "\n");
+    
+            /*Y a la derecha para el importe*/
+            $printer->setJustification(Printer::JUSTIFY_RIGHT);$printer->text(' $' . number_format($total, 0, ',', '.') ."\n");
+            $printer->text("- - - - - - - - - - - - - - - - - - - - - - - -\n");
+        }
 	}
+
+
+    
+    $printer->text("------------------------------------------------\n");
+    
+
+
 	
 	$printer->text("TOTAL INGRESOS :" . ' $' . number_format($totalVentas, 0, ',', '.') . "\n");
 	
@@ -234,10 +228,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $printer->setEmphasis(true);
     $printer->text("       CONCEPTO                     VALOR    \n");
     $printer->text("------------------------------------------------\n");
-	$printer->text("    EGRESO :" . '                  $' . number_format($totalGastos, 0, ',', '.') . "\n");
-	$printer->text("   INGRESO :" . '                  $' . number_format($totalVentas, 0, ',', '.') . "\n");
+	
+    $printer->text("   INGRESO :" . '                  $' . number_format($totalEfectivo + $totalTarjeta, 0, ',', '.') . "\n");
+    $printer->text("   TARJETA :" . '                  $' . number_format($totalTarjeta, 0, ',', '.') . "\n");
+    $printer->text("  EFECTIVO :" . '                  $' . number_format($totalEfectivo, 0, ',', '.') . "\n");
+    $printer->text("    EGRESO :" . '                  $' . number_format($totalGastos, 0, ',', '.') . "\n");
+	
 	$printer->text("- - - - - - - - - - - - - - - - - - - - - - - -\n");
-	$printer->text("    TOTAL  :" . '                  $' . number_format(($totalVentas-$totalGastos), 0, ',', '.') . "\n");
+	$printer->text("TOTAL EN CAJA :" . '                  $' . number_format(($totalEfectivo-$totalGastos), 0, ',', '.') . "\n");
 	$printer->text("------------------------------------------------\n");
 	
     /*

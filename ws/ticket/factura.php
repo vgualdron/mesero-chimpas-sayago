@@ -35,15 +35,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $mesa = $frm['mesa'];
     echo $mesa['descripcion'];
     $numeroMesa = substr($mesa['descripcion'], 4);
-    echo $numeroMesa;
+    
+    $myString = $mesa['descripcion'];
+    $tienePropina = false;
+
+    if (strpos($myString, 'DOMICILIO') === false && strpos($myString, 'DE LLEVAR') === false) {
+        $tienePropina = true;
+    }
+
     if ($numeroMesa >= 25 && $numeroMesa <= 45) {
-        printInvoice($frm, 'SEGUNDO-PISO-PRINT');
+        printInvoice($frm, 'SEGUNDO-PISO-PRINTER', $tienePropina);
     } else {
-        printInvoice($frm, 'POS-80');
+        printInvoice($frm, 'POS-80', $tienePropina);
     }
 }
 
-function printInvoice($frm, $printerName) {
+function printInvoice($frm, $printerName, $tienePropina = false) {
     $conexion = new Conexion();
     $conexion ->query("SET NAMES 'utf8';");
 
@@ -205,7 +212,19 @@ function printInvoice($frm, $printerName) {
         $totalCantidadProductos = $totalCantidadProductos + $producto["cantidadproducto"];
         /*Alinear a la izquierda para la cantidad y el nombre*/
         $printer->setJustification(Printer::JUSTIFY_LEFT);
-        $printer->text("  ".substr($producto["cantidadproducto"],0,22). "   ".strtr( $producto["descripcionproducto"], $unwanted_array ). "\n");
+        
+        $textoPrefijo = '1/2';
+        if (empty($producto["descripcionproducto2"])) {
+            $textoPrefijo = '';
+        }
+
+        if (!empty($producto["descripcionproducto2"])) {
+            $printer->text(substr($producto["cantidadproducto"],0,22). " -".strtr($textoPrefijo." ".$producto["descripcionproducto"], $unwanted_array ). "\n");
+            $printer->text("   ".strtr( $textoPrefijo." ".$producto["descripcionproducto2"], $unwanted_array ). "\n");
+        } else {
+            $printer->text(substr($producto["cantidadproducto"],0,22). " - ".strtr( $textoPrefijo." ".$producto["descripcionproducto"], $unwanted_array ). "\n");
+        }
+        
 
         /*Y a la derecha para el importe*/
         $printer->setJustification(Printer::JUSTIFY_RIGHT);
@@ -220,12 +239,23 @@ function printInvoice($frm, $printerName) {
         Terminamos de imprimir
         los productos, ahora va el total
     */
+    
+    $propina = 0;
+    
     $printer->text("------------------------------------------------\n");
     $printer->setEmphasis(true);
     $printer->setJustification(Printer::JUSTIFY_RIGHT);
+    $printer->setTextSize(1,1);
+    $printer->setEmphasis(false);
+    
+    if ($tienePropina === true) {
+        $propina = $total * 0.10;
+        $printer->text("SUBTOTAL: $".  number_format($total, 0, ',', '.') ."\n");
+        $printer->text("PROPINA SUGERIDA: $".  number_format($propina, 0, ',', '.') ."\n");
+    }
     $printer->setTextSize(2,2);
     $printer->setEmphasis(true);
-    $printer->text("TOTAL: $".  number_format($total, 0, ',', '.') ."\n");
+    $printer->text("TOTAL: $".  number_format($total + $propina, 0, ',', '.') ."\n");
     $printer->selectPrintMode();
     $printer->setJustification(Printer::JUSTIFY_LEFT);
     $printer->text("CANTIDAD PRODUCTOS: ". $totalCantidadProductos ."\n");
@@ -233,11 +263,11 @@ function printInvoice($frm, $printerName) {
     
     $printer->text("    BASE      %          IVA      %       ICO   \n");
     
-    // $base = $total - ($total * 0.08);
-    $base = $total;
+    $base = $total - ($total * 0.08);
+    // $base = $total;
     $iva = 0;
-    // $ico = ($total * 0.08);
-    $ico = ($total * 0);
+    $ico = ($total * 0.08);
+    // $ico = ($total * 0);
     $printer->text(number_format($base, 2, ',', '.') ."    0 " . "         0.00    " . "  8   " . number_format($ico, 2, ',', '.') . "\n");
     $printer->text("-------------  ----------------  ---------------\n");
     $printer->setEmphasis(true);

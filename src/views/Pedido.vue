@@ -24,7 +24,7 @@
                       <!--<i :class="aplicacion.icono + ' bg-primary p-3 font-2xl mr-3 float-left'"></i>-->
                       <b-badge v-if="item.usada == null" variant="success">DISPONIBLE</b-badge>
                       <b-badge v-else variant="info">PEDIDO {{item.descripcionestadopedido}}</b-badge><br>
-                      <b-badge v-if="item.usada" variant="secondary">MESERO: {{item.mesero}}</b-badge><br>
+                      <b-badge v-if="item.usada" variant="secondary">MESERO:<br> {{item.mesero}}</b-badge><br>
                       <b-badge v-if="item.usada" variant="dark">TIEMPO: {{item.minutos}} minutos</b-badge>
                     </b-card-body>
                     <div slot="footer">
@@ -54,7 +54,7 @@
   cursor: pointer;
 }
 .border {
-  border: 7px solid #bd142b;
+  border: 7px solid #ffc107;
 }
 </style>
 
@@ -74,7 +74,12 @@ export default {
     listarMesas: function() {
       this.$loader.open({ message: "Cargando ..." });
       var self = this;
-      var frm = {};
+      var token = window.localStorage.getItem("token");
+      var frm = {
+        params: {
+          token: token
+        }
+      };
       this.$http.get("ws/mesa/", frm).then(resp => {
           self.items = resp.data;
           if (self.items && self.items.length > 0) {

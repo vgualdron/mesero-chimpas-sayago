@@ -160,6 +160,9 @@
                     <i class="fa fa-trash"></i>
                   </b-button>
                 </template>
+                <template slot="descripcionprod" slot-scope="row">
+                  <p v-html="row.item.descripcionprod"></p>
+                </template>
               </b-table>
               <b-row v-if="items && items.length > 0" class="mt-1 mb-2 text-center">
                 <b-col cols="12">
@@ -205,13 +208,14 @@
       </b-col>
     </b-row>
 
-    <b-modal v-if="objeto" centered v-model="showModal" :title="tipoOperacion">
+    <b-modal v-if="objeto" centered v-model="showModal" :title="tipoOperacion" size="lg">
       <b-container>
         <b-form-checkbox
           v-model="isPizza"
           name="checkbox-is-pizza"
           :v-model="isPizza"
           :unchecked-value="false"
+          :disabled="tipoOperacion == 'Eliminar' || tipoOperacion == 'Ver' || pedido.descripcionRolSesion == 'HELADOS'"
           class="mb-3"
         >
           ¿ Es Pizza ?
@@ -219,18 +223,47 @@
         <template v-if="isPizza">
           <b-form-group label="Tamaño">
             <b-form-radio-group
-                id="radio-group-2"
+                id="radio-group-size"
                 v-model="sizePizza"
-                name="radio-sub-component"
+                name="radio-size-component"
+                :disabled="tipoOperacion == 'Eliminar' || tipoOperacion == 'Ver'"
               >
-              <b-form-radio name="some-radios" value="GRANDE">GRANDE</b-form-radio>
-              <b-form-radio name="some-radios" value="PEQUEÑA">PEQUEÑA</b-form-radio>
-              <b-form-radio name="some-radios" value="PORCIÓN">PORCIÓN</b-form-radio>
+              <b-form-radio name="size-radios" value="GRANDE">GRANDE</b-form-radio>
+              <b-form-radio name="size-radios" value="PEQUEÑA">PEQUEÑA</b-form-radio>
+              <b-form-radio name="size-radios" value="PORCIÓN">PORCIÓN</b-form-radio>
+            </b-form-radio-group>
+          </b-form-group>
+          <b-form-group label="Fracciones">
+            <b-form-radio-group
+                id="radio-group-fraccion"
+                v-model="fraccionPizza"
+                name="radio-fraccion-component"
+                :disabled="sizePizza == 'PORCIÓN' || tipoOperacion == 'Eliminar' || tipoOperacion == 'Ver'"
+              >
+              <b-form-radio name="fraccion-radios" value="ENTERA">ENTERA</b-form-radio>
+              <b-form-radio name="fraccion-radios" value="MITAD">MITAD Y MITAD</b-form-radio>
             </b-form-radio-group>
           </b-form-group>
         </template>
+        <b-row class="mb-3" v-if="fraccionPizza == 'MITAD' && isPizza">
+          <b-col
+            cols="6"
+            class="text-left">
+            <span class="font-weight-bold">
+              FRACCIÓN 1
+            </span>:<br>
+          </b-col>
+          <b-col
+            cols="6"
+            class="text-left">
+            <span class="font-weight-bold">
+              FRACCIÓN 2
+            </span>:<br>
+          </b-col>
+        </b-row>
         <b-row class="mb-3">
           <b-col
+            cols="6"
             class="text-left">
             <span class="font-weight-bold">
               <span style="color:red;"> </span>Tipo Producto
@@ -242,9 +275,24 @@
               <option :key="'tipo_' + t" v-for="(tipo, t) in filtrarTipoProductos(tipoProductos)" :value="tipo.id">{{tipo.descripcion}}</option>
             </b-form-select>
           </b-col>
+          <b-col
+            v-if="fraccionPizza == 'MITAD' && isPizza"
+            cols="6"
+            class="text-left">
+            <span class="font-weight-bold">
+              <span style="color:red;"> </span>Tipo Producto
+            </span>:<br>
+            <span v-if="(tipoOperacion === 'Ver' || tipoOperacion === 'Eliminar')">
+              {{objeto.descripciontipoproducto2}}
+            </span>
+            <b-form-select v-else v-model="objeto.idtipoproducto2" class="mb-3">
+              <option :key="'tipo2_' + t" v-for="(tipo, t) in filtrarTipoProductos(tipoProductos)" :value="tipo.id">{{tipo.descripcion}}</option>
+            </b-form-select>
+          </b-col>
         </b-row>
         <b-row class="mb-3">
           <b-col
+            cols="6"
             class="text-left">
             <span class="font-weight-bold">
               <span style="color:red;">* </span>Producto
@@ -254,7 +302,6 @@
             </span>
             <b-form-select v-else v-model="objeto.idproducto" class="mb-3">
               <template v-for="(tipo, t) in tipoProductos">
-                
                   <template v-if="objeto && objeto.idtipoproducto">
                     <template v-for="(producto, p) in tipo.productos">
                       <option v-if="producto.idtipoproducto == objeto.idtipoproducto" :key="'prod_' + t + '_' + p" :value="producto.id">{{producto.descripcion}}</option>
@@ -265,13 +312,38 @@
                       <option :key="'prod_' + t + '_' + p" :value="producto.id">{{producto.descripcion}}</option>
                     </template>
                   </template>
-                
+              </template>
+            </b-form-select>
+          </b-col>
+          <b-col
+            v-if="fraccionPizza == 'MITAD' && isPizza"
+            cols="6"
+            class="text-left">
+            <span class="font-weight-bold">
+              <span style="color:red;">* </span>Producto 2
+            </span>:<br>
+            <span v-if="(tipoOperacion === 'Ver' || tipoOperacion === 'Eliminar')">
+              {{objeto.descripcionproducto2}}
+            </span>
+            <b-form-select v-else v-model="objeto.idproducto2" class="mb-3">
+              <template v-for="(tipo, t) in tipoProductos">
+                <template v-if="objeto && objeto.idtipoproducto2">
+                  <template v-for="(producto, p) in tipo.productos">
+                    <option v-if="producto.idtipoproducto == objeto.idtipoproducto2" :key="'prod2_' + t + '_' + p" :value="producto.id">{{producto.descripcion}}</option>
+                  </template>
+                </template>
+                <template v-else>
+                  <template v-for="(producto, p) in tipo.productos">
+                    <option :key="'prod2_' + t + '_' + p" :value="producto.id">{{producto.descripcion}}</option>
+                  </template>
+                </template>
               </template>
             </b-form-select>
           </b-col>
         </b-row>
         <b-row class="mb-3">
           <b-col
+            cols="6"
             class="text-left">
             <span class="font-weight-bold">
               <span style="color:red;">* </span>Cantidad
@@ -379,6 +451,7 @@ export default {
       showModal: false,
       showModalCambiarMesa: false,
       tipoProductos: [],
+      tipoOperacion: null,
       campos: [
         {
           key: "cantidadproducto",
@@ -387,14 +460,14 @@ export default {
           thStyle: "text-align:center;",
           tdClass: "columna-centrada"
         },
-        {
+        /* {
           key: "descripciontipoproducto",
           label: "Tipo producto",
           sortable: true,
           thStyle: "text-align:center;"
-        },
+        }, */
         {
-          key: "descripcionproducto",
+          key: "descripcionprod",
           label: "Producto",
           sortable: true,
           thStyle: "text-align:center;"
@@ -424,8 +497,8 @@ export default {
       asociarCliente: false,
       isPizza: true,
       sizePizza: 'GRANDE',
+      fraccionPizza: 'ENTERA',
       options: [
-        { value: '0.5', text: '1/2' },
         { value: '1', text: '1' },
         { value: '2', text: '2' },
         { value: '3', text: '3' },
@@ -435,17 +508,7 @@ export default {
         { value: '7', text: '7' },
         { value: '8', text: '8' },
         { value: '9', text: '9' },
-        { value: '10', text: '10' },
-        { value: '11', text: '11' },
-        { value: '12', text: '12' },
-        { value: '13', text: '13' },
-        { value: '14', text: '14' },
-        { value: '15', text: '15' },
-        { value: '16', text: '16' },
-        { value: '17', text: '17' },
-        { value: '18', text: '18' },
-        { value: '19', text: '19' },
-        { value: '20', text: '20' }
+        { value: '10', text: '10' }
       ]
     };
   },
@@ -472,6 +535,77 @@ export default {
         });
         this.objeto.descripcionproducto = producto.descripcion;
       }
+    },
+    'objeto.idproducto2': function (valor) {
+      const tipoProducto = this.tipoProductos.find((tipoProducto) => {
+        return tipoProducto.id == this.objeto.idtipoproducto2;
+      });
+      if (tipoProducto && tipoProducto.productos) {
+        const producto = tipoProducto.productos.find((producto) => {
+          return producto.id == this.objeto.idproducto2;
+        });
+        this.objeto.descripcionproducto2 = producto.descripcion;
+      }
+    },
+    sizePizza: function(valor) {
+      if (this.tipoOperacion == 'Agregar' || this.tipoOperacion == 'Modificar') {
+        this.objeto = {
+          id: this.objeto.id,
+          idtipoproducto: null,
+          idtipoproducto2: null,
+          descripciontipoproducto: null,
+          descripciontipoproducto2: null,
+          idproducto: null,
+          idproducto2: null,
+          descripcionproducto: null,
+          descripcionproducto2: null,
+          costoproducto: null,
+          cantidadproducto: 1,
+          precioproducto: null,
+          descripcion: null
+        };
+      }
+      if (valor == 'PORCIÓN') {
+        this.fraccionPizza = 'ENTERA';
+      }
+    },
+    fraccionPizza: function(valor) {
+      if (this.tipoOperacion == 'Agregar' || this.tipoOperacion == 'Modificar') {
+        this.objeto = {
+          id: this.objeto.id,
+          idtipoproducto: null,
+          idtipoproducto2: null,
+          descripciontipoproducto: null,
+          descripciontipoproducto2: null,
+          idproducto: null,
+          idproducto2: null,
+          descripcionproducto: null,
+          descripcionproducto2: null,
+          costoproducto: null,
+          cantidadproducto: 1,
+          precioproducto: null,
+          descripcion: null
+        };
+      }
+    },
+    isPizza: function(valor) {
+      if (this.tipoOperacion == 'Agregar' || this.tipoOperacion == 'Modificar') {
+        this.objeto = {
+          id: this.objeto.id,
+          idtipoproducto: null,
+          idtipoproducto2: null,
+          descripciontipoproducto: null,
+          descripciontipoproducto2: null,
+          idproducto: null,
+          idproducto2: null,
+          descripcionproducto: null,
+          descripcionproducto2: null,
+          costoproducto: null,
+          cantidadproducto: 1,
+          precioproducto: null,
+          descripcion: null
+        };
+      }
     }
   },
   methods: {
@@ -489,7 +623,10 @@ export default {
     listarTiposPedido: function() {
       this.$loader.open({ message: "Cargando ..." });
       var self = this;
-      var frm = {};
+      var token = window.localStorage.getItem("token");
+      var frm = {
+        token: token
+      };
       this.$http.post("ws/productotipoproducto/", frm).then(resp => {
         self.tipoProductos = resp.data.tiposProducto;
         self.$loader.close();
@@ -503,40 +640,63 @@ export default {
     },
     cargarFormulario: function(obj, operacion) {
       this.tipoOperacion = operacion;
-      this.objeto = obj;
+      this.objeto = {...obj};
       this.objetoViejo = null;
       if (obj === null) {
         this.objeto = {
           id: null,
           idtipoproducto: null,
+          idtipoproducto2: null,
           descripciontipoproducto: null,
+          descripciontipoproducto2: null,
           idproducto: null,
+          idproducto2: null,
           descripcionproducto: null,
+          descripcionproducto2: null,
           costoproducto: null,
-          cantidadproducto: null,
+          cantidadproducto: 1,
           precioproducto: null,
           descripcion: null
         };
       } else {
-        this.selectedVisble = obj.visible
+        this.selectedVisble = obj.visible;
         this.cantidadProductoVieja = obj.cantidadproducto;
-        this.objeto = {
-          id: obj.id,
-          idtipoproducto: obj.idtipoproducto,
-          descripciontipoproducto: obj.descripciontipoproducto,
-          idproducto: obj.idproducto,
-          descripcionproducto: obj.descripcionproducto,
-          costoproducto: obj.costoproducto,
-          cantidadproducto: obj.cantidadproducto,
-          precioproducto: obj.precioproducto,
-          descripcion: obj.descripcion
-        };
+        this.isPizza = obj.descripciontipoproducto ? obj.descripciontipoproducto.includes('PIZZAS') : false;
+        this.fraccionPizza = obj.descripcionproducto2 ? 'MITAD' : 'ENTERA';
 
-        this.objetoViejo = {
-          ...this.objeto,
-          descripciontipoproducto: descripcionTipoProducto
+        if (obj.descripciontipoproducto && obj.descripciontipoproducto.includes('GRANDE')) {
+          this.sizePizza = 'GRANDE';
+        } else if (obj.descripciontipoproducto && obj.descripciontipoproducto.includes('PEQUEÑA')) {
+          this.sizePizza = 'PEQUEÑA';
+        } else if (obj.descripciontipoproducto && obj.descripciontipoproducto.includes('PORCIÓN')) {
+          this.sizePizza = 'PORCIÓN';
         }
+
+        setTimeout(() => {
+          this.objeto = {
+            id: obj.id,
+            idtipoproducto: obj.idtipoproducto,
+            idtipoproducto2: obj.idtipoproducto2,
+            descripciontipoproducto: obj.descripciontipoproducto,
+            descripciontipoproducto2: obj.descripciontipoproducto2,
+            idproducto: obj.idproducto,
+            idproducto2: obj.idproducto2,
+            descripcionprod: obj.descripcionprod,
+            descripcionproducto: obj.descripcionproducto,
+            descripcionproducto2: obj.descripcionproducto2,
+            costoproducto: obj.costoproducto,
+            cantidadproducto: obj.cantidadproducto,
+            precioproducto: obj.precioproducto,
+            descripcion: obj.descripcion
+          };
+
+          this.objetoViejo = {
+            ...this.objeto,
+            // descripciontipoproducto: descripcionTipoProducto
+          }
+        }, 500);
       }
+
       this.showModal = true;
     },
     validarCampos: function() {
@@ -557,30 +717,21 @@ export default {
         idmesa: self.mesa.id,
         token: token
       };
-      this.$alertify
-        .confirmWithTitle(
-          "Guardar",
-          "Seguro que desea crear un nuevo pedido?",
-          function() {
-            self.$loader.open({ message: "Creando ..." });
-            self.$http.post("ws/pedido/", frm).then(resp => {
-              var respuesta = resp.data;
-              self.idPedido = respuesta.id;
-              self.consultarPedido(self.idPedido);
-              self.$toast.success(resp.data.mensaje);
-              self.$loader.close();
-            }).catch(resp => {
-              self.$loader.close();
-              if (resp.data && resp.data.mensaje) {
-                self.$toast.error(resp.data.mensaje);
-              } else {
-                self.$toast.error("No se pudo crear el pedido");
-              }
-            });
-          },
-          function() {}
-        )
-        .set("labels", { ok: "Aceptar", cancel: "Cancelar" });
+      self.$loader.open({ message: "Creando ..." });
+      self.$http.post("ws/pedido/", frm).then(resp => {
+        var respuesta = resp.data;
+        self.idPedido = respuesta.id;
+        self.consultarPedido(self.idPedido);
+        self.$toast.success(resp.data.mensaje);
+        self.$loader.close();
+      }).catch(resp => {
+        self.$loader.close();
+        if (resp.data && resp.data.mensaje) {
+          self.$toast.error(resp.data.mensaje);
+        } else {
+          self.$toast.error("No se pudo crear el pedido");
+        }
+      });
     },
     consultarPedido: function(id) {
       var self = this;
@@ -595,6 +746,7 @@ export default {
       self.$http.get("ws/pedido/", frm).then(resp => {
         var respuesta = resp.data;
         self.pedido = respuesta;
+        self.isPizza = self.pedido && self.pedido.descripcionRolSesion == 'HELADOS' ? false : true; 
         self.cardHeader =  '<strong> Detalles del pedido, ' + (this.$route.params.mesa && this.$route.params.mesa.descripcion ? this.$route.params.mesa.descripcion : '') + ' ( ' + (this.pedido && this.pedido.descripcionestado ? this.pedido.descripcionestado : '') + ' )' + ' ( ' + (this.pedido && this.pedido.prefijofactura ? this.pedido.prefijofactura : '') + ' - ' + (this.pedido && this.pedido.numerofactura ? this.pedido.numerofactura : '') + ' )' + ' </strong>';
         self.$loader.close();
         if (self.pedido.telefonocliente && self.pedido.nombrecliente && self.pedido.direccioncliente) {

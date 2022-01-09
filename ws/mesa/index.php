@@ -39,24 +39,32 @@ try {
           exit();
         }
   	  } else {
-        $sql = $conexion->prepare(" SELECT distinct
-                                    mesa.mesa_id as id,
-                                    mesa.mesa_descripcion as descripcion,
-                                    mesa.mesa_orden as orden,
-                                    mesa.mesa_estado as estado,
-                                    pedi.pedi_id as usada,
-                                    pedi.pedi_fecha as fechapedido,
-                                    pedi.pege_idmesero as idmesero,
-                                    CONCAT(pena.pena_primernombre, ' ', pena.pena_primerapellido) as mesero,
-                                    TIMESTAMPDIFF(MINUTE, pedi.pedi_fecha, NOW()) as minutos,
-                                    espe.espe_id as idestadopedido,
-                                    espe.espe_descripcion as descripcionestadopedido
-                                    FROM pinchetas_restaurante.mesa mesa
-                                    LEFT JOIN pinchetas_restaurante.pedido pedi on (pedi.mesa_id = mesa.mesa_id and pedi.espe_id in (1,2,3,4,5))
-                                    LEFT JOIN pinchetas_restaurante.estadopedido espe on (espe.espe_id = pedi.espe_id)
-                                    LEFT JOIN pinchetas_general.personanatural pena on (pedi.pege_idmesero = pena.pege_id)
-                                    WHERE mesa.mesa_estado = 'ACTIVO'
-                                    order by mesa.mesa_orden; ");
+        $registradopor = openCypher('decrypt', $_GET['token']);
+        $SQL = 'SELECT distinct
+        mesa.mesa_id as id,
+        mesa.mesa_descripcion as descripcion,
+        mesa.mesa_orden as orden,
+        mesa.mesa_estado as estado,
+        pedi.pedi_id as usada,
+        pedi.pedi_fecha as fechapedido,
+        pedi.pege_idmesero as idmesero,
+        CONCAT(pena.pena_primernombre, " ", pena.pena_primerapellido) as mesero,
+        TIMESTAMPDIFF(MINUTE, pedi.pedi_fecha, NOW()) as minutos,
+        espe.espe_id as idestadopedido,
+        espe.espe_descripcion as descripcionestadopedido
+        FROM pinchetas_restaurante.mesa mesa
+        LEFT JOIN pinchetas_restaurante.pedido pedi on (pedi.mesa_id = mesa.mesa_id and pedi.espe_id in (1,2,3,4,5))
+        LEFT JOIN pinchetas_restaurante.estadopedido espe on (espe.espe_id = pedi.espe_id)
+        LEFT JOIN pinchetas_general.personanatural pena on (pedi.pege_idmesero = pena.pege_id)
+        WHERE mesa.mesa_estado = "ACTIVO"
+        AND mesa.mesa_descripcion LIKE CONCAT("%", (
+          CASE
+            WHEN (SELECT COUNT(*) from pinchetas_general.usuariorol usro INNER JOIN pinchetas_general.rol rol ON (usro.rol_id = rol.rol_id) INNER JOIN pinchetas_general.usuario usua ON (usua.usua_id = usro.usua_id AND usua.pege_id = ? ) WHERE pinchetas_general.rol.rol_descripcion LIKE "%HELADOS%") = 0 THEN ""
+            ELSE "HELADOS" 
+          END ), "%")
+        ORDER BY mesa.mesa_orden; ';
+        $sql = $conexion->prepare($SQL);
+        $sql->bindValue(1, $registradopor);
         $sql->execute();
         $sql->setFetchMode(PDO::FETCH_ASSOC);
         header("HTTP/1.1 200 OK");

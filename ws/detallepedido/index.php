@@ -52,23 +52,30 @@ try {
         }
   	  } else if (isset($_GET['idpedido'])) {
         $date = date("Y-m-d");
-        $sql = $conexion->prepare(" select 
-                                    depe.depe_id as id,
-                                    depe.depe_descripcion as descripcion,
-                                    depe.pedi_id as idpedido,
-                                    tipr.tipr_id as idtipoproducto,
-                                    tipr.tipr_descripcion as descripciontipoproducto,
-                                    depe.prod_id as idproducto,
-                                    prod.prod_descripcion as descripcionproducto,
-                                    depe.prod_costo as costoproducto,
-                                    depe.prod_cantidad as cantidadproducto,
-                                    depe.prod_precio as precioproducto
-                                    FROM pinchetas_restaurante.detallepedido depe
-                                    inner join pinchetas_restaurante.pedido pedi on (pedi.pedi_id = depe.pedi_id)
-                                    inner join pinchetas_restaurante.producto prod on (prod.prod_id = depe.prod_id)
-                                    inner join pinchetas_restaurante.tipoproducto tipr on (tipr.tipr_id = prod.tipr_id)
-                                    WHERE depe.pedi_id = ?
-                                    ORDER BY depe_fechacambio;");
+        $sql = $conexion->prepare(" SELECT 
+        depe.depe_id as id,
+        depe.depe_descripcion as descripcion,
+        depe.pedi_id as idpedido,
+        tipr.tipr_id as idtipoproducto,
+        tipr.tipr_descripcion as descripciontipoproducto,
+        tipr2.tipr_id as idtipoproducto2,
+        tipr2.tipr_descripcion as descripciontipoproducto2,
+        depe.prod_id as idproducto,
+        depe.prod_id2 as idproducto2,
+        CONCAT(IF(ISNULL(depe.prod_id2), CONCAT(prod.prod_descripcion), CONCAT(IF(ISNULL(depe.prod_id2), ' ', '* 1/2'), ' ', prod.prod_descripcion)), ' ', IF(ISNULL(depe.prod_id2), '', CONCAT(IF(ISNULL(depe.prod_id2), '', '<br>* 1/2 '), ' ', prod2.prod_descripcion))) AS descripcionprod,
+        prod.prod_descripcion as descripcionproducto,
+        prod2.prod_descripcion as descripcionproducto2,
+        depe.prod_costo as costoproducto,
+        depe.prod_cantidad as cantidadproducto,
+        depe.prod_precio as precioproducto
+        FROM pinchetas_restaurante.detallepedido depe
+        inner join pinchetas_restaurante.pedido pedi on (pedi.pedi_id = depe.pedi_id)
+        inner join pinchetas_restaurante.producto prod on (prod.prod_id = depe.prod_id)
+        inner join pinchetas_restaurante.tipoproducto tipr on (tipr.tipr_id = prod.tipr_id)
+        left join pinchetas_restaurante.producto prod2 on (prod2.prod_id = depe.prod_id2)
+        left join pinchetas_restaurante.tipoproducto tipr2 on (tipr2.tipr_id = prod2.tipr_id)
+        WHERE depe.pedi_id = ?
+        ORDER BY depe_fechacambio;");
         $sql->bindValue(1, $_GET['idpedido']);
         $sql->execute();
         $sql->setFetchMode(PDO::FETCH_ASSOC);
@@ -108,6 +115,7 @@ try {
       $pedido = $frm['pedido'];
       $idpedido = $frm['idpedido'];
       $idproducto = $frm['idproducto'];
+      $idproducto2 = $frm['idproducto2'];
       $cantidadproducto = $frm['cantidadproducto'];
       $registradopor = openCypher('decrypt', $frm['token']);
       $date = date("Y-m-d H:i:s");
@@ -115,34 +123,40 @@ try {
       if ($pedido) {
         $idestadopedido = $pedido['idestado'];
       }
-      if ($idestadopedido > 1) {
-        printCommand($frm, 'ADD');
-      }
       
       $sql = "INSERT INTO 
-              pinchetas_restaurante.detallepedido(depe_descripcion, pedi_id, prod_id, prod_costo, prod_cantidad, prod_precio, depe_registradopor, depe_fechacambio)
-              VALUES (
-              ?,
-              ?,
-              ?,
-              (select prod_costo from pinchetas_restaurante.producto where prod_id = ?),
-              ?,
-              (select prod_precio from pinchetas_restaurante.producto where prod_id = ?),
-              ?,
-              ?); ";
+        pinchetas_restaurante.detallepedido(depe_descripcion, pedi_id, prod_id, prod_id2, prod_costo, prod_cantidad, prod_precio, depe_registradopor, depe_fechacambio)
+        VALUES (
+        ?,
+        ?,
+        ?,
+        ?,
+        (select MAX(prod_costo) from pinchetas_restaurante.producto where prod_id = ? OR prod_id = ?),
+        ?,
+        (select MAX(prod_precio) from pinchetas_restaurante.producto where prod_id = ? OR prod_id = ?),
+        ?,
+        ?); ";
             
       $sql = $conexion->prepare($sql);
       $sql->bindValue(1, $descripcion);
       $sql->bindValue(2, $idpedido);
       $sql->bindValue(3, $idproducto);
-      $sql->bindValue(4, $idproducto);
-      $sql->bindValue(5, $cantidadproducto);
-      $sql->bindValue(6, $idproducto);
-      $sql->bindValue(7, $registradopor);
-      $sql->bindValue(8, $date);
+      $sql->bindValue(4, $idproducto2);
+      $sql->bindValue(5, $idproducto);
+      $sql->bindValue(6, $idproducto2);
+      $sql->bindValue(7, $cantidadproducto);
+      $sql->bindValue(8, $idproducto);
+      $sql->bindValue(9, $idproducto2);
+      $sql->bindValue(10, $registradopor);
+      $sql->bindValue(11, $date);
       $sql->execute();
       $postId = $conexion->lastInsertId();
+      
+      $frm['id'] = $postId;
  
+      if ($idestadopedido > 1) {
+        printCommand($frm, 'ADD');
+      }
 
     $input['id'] = $postId;
     $input['mensaje'] = "Registrado con éxito";
@@ -159,6 +173,7 @@ try {
       $descripcion = $frm['descripcion'];
       $idpedido = $frm['idpedido'];
       $idproducto = $frm['idproducto'];
+      $idproducto2 = $frm['idproducto2'];
       $cantidadproducto = $frm['cantidadproducto'];
       $registradopor = openCypher('decrypt', $frm['token']);
       $date = date("Y-m-d H:i:s");
@@ -177,9 +192,10 @@ try {
               SET depe_descripcion = ?,
               pedi_id = ?,
               prod_id = ?,
-              prod_costo = (select prod_costo from pinchetas_restaurante.producto where prod_id = ?),
+              prod_id2 = ?,
+              prod_costo = (select MAX(prod_costo) from pinchetas_restaurante.producto where prod_id = ? OR prod_id = ?),
               prod_cantidad = ?,
-              prod_precio = (select prod_precio from pinchetas_restaurante.producto where prod_id = ?),
+              prod_precio = (select MAX(prod_precio) from pinchetas_restaurante.producto where prod_id = ? OR prod_id = ?),
               depe_registradopor = ?,
               depe_fechacambio = ?
               WHERE depe_id = ?; ";
@@ -188,12 +204,16 @@ try {
       $sql->bindValue(1, $descripcion);
       $sql->bindValue(2, $idpedido);
       $sql->bindValue(3, $idproducto);
-      $sql->bindValue(4, $idproducto);
-      $sql->bindValue(5, $cantidadproducto);
-      $sql->bindValue(6, $idproducto);
-      $sql->bindValue(7, $registradopor);
-      $sql->bindValue(8, $date);
-      $sql->bindValue(9, $id);
+      $sql->bindValue(4, $idproducto2);
+      $sql->bindValue(5, $idproducto);
+      $sql->bindValue(6, $idproducto2);
+      $sql->bindValue(7, $cantidadproducto);
+      $sql->bindValue(8, $idproducto);
+      $sql->bindValue(9, $idproducto2);
+
+      $sql->bindValue(10, $registradopor);
+      $sql->bindValue(11, $date);
+      $sql->bindValue(12, $id);
       $result = $sql->execute();
       
       if($result) {

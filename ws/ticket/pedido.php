@@ -55,6 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         printCommand($mesa, $productos, "KIOSCO-PRINTER");
     } */
     printCommand($mesa, $productos, "COMANDAS-PRINTER");
+    printCommand($mesa, $productos, "POS-80");
 }
 
 function printCommand($mesa, $productos, $printerName) {
@@ -106,15 +107,32 @@ function printCommand($mesa, $productos, $printerName) {
     # Para mostrar el total
     $total = 0;
     foreach ($productos as $clave => $producto) {
+        $a = array(14, 15, 16, 29, 21, 22, 23, "14", "15", "16", "29", "21", "22", "23");
+        if(in_array($producto["idtipoproducto"], $a)) {
+            continue; 
+        }
         $total += $producto["cantidadproducto"] * $producto["precioproducto"];
         $printer->text("------------------------------------------------\n");
         $printer->setEmphasis(true);
         /*Alinear a la izquierda para la cantidad y el nombre*/
         $printer->setJustification(Printer::JUSTIFY_LEFT);
-        $printer->text("  ".$producto["cantidadproducto"]. "  - ".strtr( $producto["descripciontipoproducto"], $unwanted_array ). "  - ".strtr( $producto["descripcionproducto"], $unwanted_array ). "\n");
+        $printer->text("CANTIDAD ( ".strtr( $producto["cantidadproducto"]. " )", $unwanted_array ). "\n");
+        
+        $textoPrefijo = '1/2';
+        if (empty($producto["descripcionproducto2"])) {
+            $textoPrefijo = '';
+        }
+
+        $printer->text(strtr($textoPrefijo." ".$producto["descripcionproducto"], $unwanted_array ). "\n");
+
+        if (!empty($producto["descripcionproducto2"])) {
+            $printer->text(strtr($textoPrefijo." ".$producto["descripcionproducto2"], $unwanted_array ). "\n");
+        }
+        
         if (!empty($producto["descripcion"])) {
           $printer->text("       ".strtr($producto["descripcion"], $unwanted_array ). "\n");   
         }
+
         $printer->selectPrintMode();
         $printer->text("------------------------------------------------\n");
     }
