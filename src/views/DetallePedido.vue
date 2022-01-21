@@ -45,7 +45,7 @@
               
               <b-form-checkbox
                   id="checkbox-0"
-                  v-model="pedido.facturar"
+                  v-model="facturar"
                   name="checkbox-0"
                   value="SI"
                   unchecked-value="NO"
@@ -517,7 +517,8 @@ export default {
         "ADICIONALES DE PROTEÍNA",
         "PIZZERITOS",
         "SANGRIA"
-      ]
+      ],
+      facturar: 'SI'
     };
   },
   watch: {
@@ -1088,7 +1089,7 @@ export default {
         telefonocliente: self.pedido.telefonocliente,
         direccioncliente: self.pedido.direccioncliente,
         tipopago: self.pedido.tipopago,
-        facturar: self.pedido.facturar,
+        facturar: self.facturar,
         numerofactura: self.pedido.numerofactura,
         prefijofactura: self.pedido.prefijofactura
       };
@@ -1301,7 +1302,7 @@ export default {
         telefonocliente: self.pedido.telefonocliente,
         direccioncliente: self.pedido.direccioncliente,
         tipopago: self.pedido.tipopago,
-        facturar: self.pedido.facturar,
+        facturar: self.facturar,
         numerofactura: self.pedido.numerofactura,
         prefijofactura: self.pedido.prefijofactura
       }
