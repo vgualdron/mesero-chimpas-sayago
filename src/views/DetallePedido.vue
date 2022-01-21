@@ -509,6 +509,14 @@ export default {
         { value: '8', text: '8' },
         { value: '9', text: '9' },
         { value: '10', text: '10' }
+      ],
+      itemsPrint: [
+        "LASAÑAS",
+        "PIZZAS",
+        "PANZEROTTIS",
+        "ADICIONALES DE PROTEÍNA",
+        "PIZZERITOS",
+        "SANGRIA"
       ]
     };
   },
@@ -950,7 +958,47 @@ export default {
               var respuesta = resp.data;
               self.$toast.success(resp.data.mensaje);
               self.$loader.close();
-              self.generarTicketPedido();
+              
+              const itemsValid = self.items.filter((item) => {
+                return (
+                  item.descripciontipoproducto.includes(self.itemsPrint[0])
+                  || item.descripciontipoproducto.includes(self.itemsPrint[1])
+                  || item.descripciontipoproducto.includes(self.itemsPrint[2])
+                  || item.descripciontipoproducto.includes(self.itemsPrint[3])
+                  || item.descripciontipoproducto.includes(self.itemsPrint[4])
+                  || item.descripciontipoproducto.includes(self.itemsPrint[5])
+                )
+              });
+
+              if (itemsValid.length === 0) {
+                self.atras();
+                return;
+              } else {
+                 const itemsCaja = self.items.filter((item) => {
+                  return (
+                    item.descripciontipoproducto.includes(self.itemsPrint[4])
+                    || item.descripciontipoproducto.includes(self.itemsPrint[5])
+                  )
+                });
+                
+                if (itemsCaja.length > 0 ) {
+                  self.generarTicketPedidoCaja();
+                }
+
+                const itemsCocina = self.items.filter((item) => {
+                  return (
+                    item.descripciontipoproducto.includes(self.itemsPrint[0])
+                    || item.descripciontipoproducto.includes(self.itemsPrint[1])
+                    || item.descripciontipoproducto.includes(self.itemsPrint[2])
+                    || item.descripciontipoproducto.includes(self.itemsPrint[3])
+                  )
+                });
+
+                if (itemsCocina.length > 0) {
+                  self.generarTicketPedidoCocina();
+                }
+              }
+              
               self.atras();
             }).catch(resp => {
               self.$loader.close();
@@ -1202,7 +1250,7 @@ export default {
       // this.totalFilas = itemsFiltrados.length;
       // this.paginaActual = 1;
     },
-    generarTicketPedido: function() {
+    generarTicketPedidoCaja: function() {
       var self = this;
       let token = window.localStorage.getItem("token");
       var frm = { 
@@ -1212,14 +1260,30 @@ export default {
         idmesero: self.pedido.idmesero
       }
       self.$loader.open({ message: "Generando ..." });
-      self.$http.post("ws/ticket/pedido.php", frm).then(resp => {
+      self.$http.post("ws/ticket/pedido-caja.php", frm).then(resp => {
           self.$loader.close();
-          // self.$toast.success(resp.data.mensaje);
-          // self.$toast.success("Exito");
         })
         .catch(resp => {
           self.$loader.close();
-          self.$toast.error("error generando ticket de pedido");
+          self.$toast.error("error generando ticket de pedido caja");
+        });
+    },
+    generarTicketPedidoCocina: function() {
+      var self = this;
+      let token = window.localStorage.getItem("token");
+      var frm = { 
+        productos: self.items,
+        mesa: self.mesa,
+        token: token,
+        idmesero: self.pedido.idmesero
+      }
+      self.$loader.open({ message: "Generando ..." });
+      self.$http.post("ws/ticket/pedido-cocina.php", frm).then(resp => {
+          self.$loader.close();
+        })
+        .catch(resp => {
+          self.$loader.close();
+          self.$toast.error("error generando ticket de pedido comandas");
         });
     },
     generarTicketFactura: function() {

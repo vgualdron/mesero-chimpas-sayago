@@ -55,7 +55,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         printCommand($mesa, $productos, "KIOSCO-PRINTER");
     } */
     printCommand($mesa, $productos, "COMANDAS-PRINTER");
-    printCommand($mesa, $productos, "POS-80");
 }
 
 function printCommand($mesa, $productos, $printerName) {
@@ -107,10 +106,17 @@ function printCommand($mesa, $productos, $printerName) {
     # Para mostrar el total
     $total = 0;
     foreach ($productos as $clave => $producto) {
-        $a = array(14, 15, 16, 29, 21, 22, 23, "14", "15", "16", "29", "21", "22", "23");
-        if(in_array($producto["idtipoproducto"], $a)) {
+        $a = array(
+            "LASAÑAS",
+            "PIZZAS",
+            "PANZEROTTIS",
+            "ADICIONALES DE PROTEÍNA"
+        );
+        
+        if(!in_array(strtr($producto["descripciontipoproducto"], $unwanted_array), $a)) {
             continue; 
         }
+
         $total += $producto["cantidadproducto"] * $producto["precioproducto"];
         $printer->text("------------------------------------------------\n");
         $printer->setEmphasis(true);
