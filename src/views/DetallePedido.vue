@@ -516,7 +516,9 @@ export default {
         "PANZEROTTIS",
         "ADICIONALES DE PROTEÍNA",
         "PIZZERITOS",
-        "SANGRIA"
+        "SANGRIA",
+        "HELADO",
+        "PASTA"
       ],
       facturar: 'SI'
     };
@@ -968,6 +970,8 @@ export default {
                   || item.descripciontipoproducto.includes(self.itemsPrint[3])
                   || item.descripciontipoproducto.includes(self.itemsPrint[4])
                   || item.descripciontipoproducto.includes(self.itemsPrint[5])
+                  || item.descripciontipoproducto.includes(self.itemsPrint[6])
+                  || item.descripciontipoproducto.includes(self.itemsPrint[7])
                 )
               });
 
@@ -979,6 +983,7 @@ export default {
                   return (
                     item.descripciontipoproducto.includes(self.itemsPrint[4])
                     || item.descripciontipoproducto.includes(self.itemsPrint[5])
+                    || item.descripciontipoproducto.includes(self.itemsPrint[6])
                   )
                 });
                 
@@ -992,6 +997,7 @@ export default {
                     || item.descripciontipoproducto.includes(self.itemsPrint[1])
                     || item.descripciontipoproducto.includes(self.itemsPrint[2])
                     || item.descripciontipoproducto.includes(self.itemsPrint[3])
+                    || item.descripciontipoproducto.includes(self.itemsPrint[7])
                   )
                 });
 

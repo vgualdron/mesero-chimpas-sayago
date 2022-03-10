@@ -108,11 +108,16 @@ function printCommand($mesa, $productos, $printerName) {
     foreach ($productos as $clave => $producto) {
         $a = array(
             "PIZZERITOS",
-            "SANGRIA"
+            "SANGRIA",
+            "HELADO"
         );
 
-        if(!in_array(strtr($producto["descripciontipoproducto"], $unwanted_array), $a)) {
-            continue; 
+        if (
+            strpos(strtr($producto["descripciontipoproducto"], $unwanted_array), $a[0]) === false
+            && strpos(strtr($producto["descripciontipoproducto"], $unwanted_array), $a[1]) === false
+            && strpos(strtr($producto["descripciontipoproducto"], $unwanted_array), $a[2]) === false
+        ) {
+            continue;
         }
         
         $total += $producto["cantidadproducto"] * $producto["precioproducto"];
