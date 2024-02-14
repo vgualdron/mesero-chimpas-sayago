@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if ($flagKiosko) {
         printCommand($mesa, $productos, "KIOSCO-PRINTER");
     } */
-    printCommand($mesa, $productos, "COMANDAS-PRINTER");
+    printCommand($mesa, $productos, "POS-80");
 }
 
 function printCommand($mesa, $productos, $printerName) {
@@ -111,7 +111,8 @@ function printCommand($mesa, $productos, $printerName) {
             "PIZZAS",
             "PANZEROTTIS",
             "ADICIONALES DE PROTEINA",
-            "PASTA"
+            "PASTA",
+            "PIZZETAS PERSONALES"
         );
         
         if (
@@ -120,6 +121,7 @@ function printCommand($mesa, $productos, $printerName) {
             && strpos(strtr($producto["descripciontipoproducto"], $unwanted_array), $a[2]) === false
             && strpos(strtr($producto["descripciontipoproducto"], $unwanted_array), $a[3]) === false
             && strpos(strtr($producto["descripciontipoproducto"], $unwanted_array), $a[4]) === false
+            && strpos(strtr($producto["descripciontipoproducto"], $unwanted_array), $a[5]) === false
         ) {
             continue;
         }

@@ -35,7 +35,7 @@ function printCommand($frm, $type) {
     if ($flagKiosko) {
         printTicket($mesa, $producto, $pedido, $type, "KIOSCO-PRINTER");
     } */
-    printTicket($mesa, $producto, $pedido, $type, "COMANDAS-PRINTER");
+    // printTicket($mesa, $producto, $pedido, $type, "COMANDAS-PRINTER");
     printTicket($mesa, $producto, $pedido, $type, "POS-80");
 }
 

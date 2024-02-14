@@ -45,7 +45,7 @@
               
               <b-form-checkbox
                   id="checkbox-0"
-                  v-model="facturar"
+                  v-model="pedido.facturar"
                   name="checkbox-0"
                   value="SI"
                   unchecked-value="NO"
@@ -518,7 +518,8 @@ export default {
         "PIZZERITOS",
         "SANGRIA",
         "HELADO",
-        "PASTA"
+        "PASTA",
+        "PIZZETAS PERSONALES"
       ],
       facturar: 'SI'
     };
@@ -887,6 +888,18 @@ export default {
       this.listarMesasDisponibles()
       this.showModalCambiarMesa = true
     },
+    generarTicketCambioMesa: function(frm) {
+      var self = this;
+      let token = window.localStorage.getItem("token");
+      self.$loader.open({ message: "Cambiando de mesa ..." });
+      self.$http.post("ws/ticket/cambio-mesa.php", frm).then(resp => {
+        self.$loader.close();
+      })
+      .catch(resp => {
+        self.$loader.close();
+        self.$toast.error("error generando ticket de cambio de mesa");
+      });
+    },
     cambiarMesa: function() {
       var self = this;
       if (!self.idMesaNueva) {
@@ -902,6 +915,7 @@ export default {
         token: token,
         idestado: self.pedido.idestado,
         idmesa: self.idMesaNueva,
+        idmesaVieja: self.pedido.idmesa,
         nombrecliente: self.pedido.nombrecliente,
         telefonocliente: self.pedido.telefonocliente,
         direccioncliente: self.pedido.direccioncliente,
@@ -917,6 +931,7 @@ export default {
             self.$loader.open({ message: "Cambiando ..." });
             self.$http.put("ws/pedido/", frm).then(resp => {
               var respuesta = resp.data;
+              self.generarTicketCambioMesa(frm);
               self.$toast.success(resp.data.mensaje);
               self.$loader.close();
               self.atras();
@@ -972,6 +987,7 @@ export default {
                   || item.descripciontipoproducto.includes(self.itemsPrint[5])
                   || item.descripciontipoproducto.includes(self.itemsPrint[6])
                   || item.descripciontipoproducto.includes(self.itemsPrint[7])
+                  || item.descripciontipoproducto.includes(self.itemsPrint[8])
                 )
               });
 
@@ -998,6 +1014,7 @@ export default {
                     || item.descripciontipoproducto.includes(self.itemsPrint[2])
                     || item.descripciontipoproducto.includes(self.itemsPrint[3])
                     || item.descripciontipoproducto.includes(self.itemsPrint[7])
+                    || item.descripciontipoproducto.includes(self.itemsPrint[8])
                   )
                 });
 
@@ -1095,7 +1112,7 @@ export default {
         telefonocliente: self.pedido.telefonocliente,
         direccioncliente: self.pedido.direccioncliente,
         tipopago: self.pedido.tipopago,
-        facturar: self.facturar,
+        facturar: self.pedido.facturar,
         numerofactura: self.pedido.numerofactura,
         prefijofactura: self.pedido.prefijofactura
       };
@@ -1308,7 +1325,7 @@ export default {
         telefonocliente: self.pedido.telefonocliente,
         direccioncliente: self.pedido.direccioncliente,
         tipopago: self.pedido.tipopago,
-        facturar: self.facturar,
+        facturar: self.pedido.facturar,
         numerofactura: self.pedido.numerofactura,
         prefijofactura: self.pedido.prefijofactura
       }

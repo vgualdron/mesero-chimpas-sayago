@@ -1,4 +1,4 @@
-<?php
+ <?php
 header('Access-Control-Allow-Origin: *');
 header("Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept");
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $tienePropina = true;
     }
 
-    if ($numeroMesa >= 25 && $numeroMesa <= 45) {
+    if ($numeroMesa >= 25 && $numeroMesa <= 50) {
         printInvoice($frm, 'SEGUNDO-PISO-PRINTER', $tienePropina);
     } else {
         printInvoice($frm, 'POS-80', $tienePropina);
@@ -161,14 +161,12 @@ function printInvoice($frm, $printerName, $tienePropina = false) {
     $printer->text("NIT: " . $nitEmpresa . "\n");
     $printer->text($direccionEmpresa . "\n");
     $printer->text("TEL: " . $telefonoEmpresa . "\n");
-    $printer->text($resolucionEmpresa . " \n");
-    $printer->text("" . $rangoAutorizadoFacturas . "\n");
     
     $printer->feed(1);
     $printer->setTextSize(1,1);
     $printer->setJustification(Printer::JUSTIFY_LEFT);
     if (!empty($numeroFactura)) {
-        $printer->text("FACTURA VENTA No.  : " . $prefijoFactura. " " . $numeroFactura . "\n");
+        $printer->text("FACTURA POS No.  : " . $prefijoFactura. " " . $numeroFactura . "\n");
     }
     
     if (empty($fechaFactura)) {
@@ -263,10 +261,10 @@ function printInvoice($frm, $printerName, $tienePropina = false) {
     
     $printer->text("    BASE      %          IVA      %       ICO   \n");
     
-    $base = $total - ($total * 0.08);
+    $ico = $total - ($total / 1.08);
     // $base = $total;
     $iva = 0;
-    $ico = ($total * 0.08);
+    $base = ($total * 1.08);
     // $ico = ($total * 0);
     $printer->text(number_format($base, 2, ',', '.') ."    0 " . "         0.00    " . "  8   " . number_format($ico, 2, ',', '.') . "\n");
     $printer->text("-------------  ----------------  ---------------\n");
@@ -279,9 +277,60 @@ function printInvoice($frm, $printerName, $tienePropina = false) {
     $printer->text($tipoPago . "           $".  number_format($total, 0, ',', '.') ."\n");
 
     $printer->selectPrintMode();
+    $printer->setJustification(Printer::JUSTIFY_CENTER);
+    $printer->setEmphasis(true);
+    $printer->text("\n");
+    $printer->text($resolucionEmpresa . " \n Vigencia 12 meses \n");
+    $printer->text("" . $rangoAutorizadoFacturas . "\n");
+    $printer->setEmphasis(false);
+
     $printer->text("------------------------------------------------\n");
 
+
     $printer->text("Estamos para servirle. Gracias por su compra.\n");
+
+	/*
+        Ahora vamos a imprimirla encuesta
+    */
+    $printer->feed(3);
+    $printer->setEmphasis(true);
+    $printer->setTextSize(2,1);
+    $printer->text("Encuesta de Satisfacción \n");
+	$printer->setEmphasis(false);
+    $printer->setTextSize(1,1);
+	$printer->setJustification(Printer::JUSTIFY_LEFT);
+    $printer->text("Hola, estamos interesados en ofrecer siempre \n");
+	$printer->text("calidad en nuestro servicio. Por favor ayúdanos con 3 preguntas. \n");
+	$printer->text("\n");
+   
+	$printer->text("* Como califica la atención del Asesor de mesa? \n");
+	$printer->text("Bueno_____     Regular_____     Malo_____ \n");
+	$printer->text("\n");
+	
+	$printer->text("* Como califica la limpieza del restaurante? \n");
+	$printer->text("Bueno_____     Regular_____     Malo_____ \n");
+	$printer->text("\n");
+	
+	$printer->text("* Alguna sugerencia en general? \n");
+	$printer->text("_____________________________________________ \n");
+	$printer->text("_____________________________________________ \n");
+	$printer->text("\n");
+   
+    $printer->feed(1);
+    $printer->setTextSize(1,1);
+    $printer->setJustification(Printer::JUSTIFY_LEFT);
+  
+	$printer->text("FECHA     : " . $fecha. " HORA " . $hora . "\n");
+   
+   
+    $printer->selectPrintMode();
+    // $printer->text("Otra linea" . "\n");
+    #La fecha también
+   
+
+    $printer->selectPrintMode();
+    $printer->text("------------------------------------------------\n");
+
 
     $printer->feed(2);
     $printer->cut();
