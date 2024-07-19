@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 
     if ($numeroMesa >= 25 && $numeroMesa <= 50) {
-        printInvoice($frm, 'SEGUNDO-PISO-PRINTER', $tienePropina);
+        printInvoice($frm, 'SEGUNDO-PISO-PRINT', $tienePropina);
     } else {
         printInvoice($frm, 'POS-80', $tienePropina);
     }

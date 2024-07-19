@@ -519,7 +519,9 @@ export default {
         "SANGRIA",
         "HELADO",
         "PASTA",
-        "PIZZETAS PERSONALES"
+        "PIZZETAS PERSONALES",
+		"LORENZO HOT DOGS",
+		"ADICIONALES LORENZO HOT DOGS",
       ],
       facturar: 'SI'
     };
@@ -988,6 +990,8 @@ export default {
                   || item.descripciontipoproducto.includes(self.itemsPrint[6])
                   || item.descripciontipoproducto.includes(self.itemsPrint[7])
                   || item.descripciontipoproducto.includes(self.itemsPrint[8])
+				  || item.descripciontipoproducto.includes(self.itemsPrint[9])
+				  || item.descripciontipoproducto.includes(self.itemsPrint[10])
                 )
               });
 
@@ -1015,6 +1019,8 @@ export default {
                     || item.descripciontipoproducto.includes(self.itemsPrint[3])
                     || item.descripciontipoproducto.includes(self.itemsPrint[7])
                     || item.descripciontipoproducto.includes(self.itemsPrint[8])
+					|| item.descripciontipoproducto.includes(self.itemsPrint[9])
+					|| item.descripciontipoproducto.includes(self.itemsPrint[10])
                   )
                 });
 

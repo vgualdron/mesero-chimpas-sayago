@@ -112,7 +112,9 @@ function printCommand($mesa, $productos, $printerName) {
             "PANZEROTTIS",
             "ADICIONALES DE PROTEINA",
             "PASTA",
-            "PIZZETAS PERSONALES"
+            "PIZZETAS PERSONALES",
+			"LORENZO HOT DOGS",
+			"ADICIONALES LORENZO HOT DOGS"
         );
         
         if (
@@ -122,6 +124,8 @@ function printCommand($mesa, $productos, $printerName) {
             && strpos(strtr($producto["descripciontipoproducto"], $unwanted_array), $a[3]) === false
             && strpos(strtr($producto["descripciontipoproducto"], $unwanted_array), $a[4]) === false
             && strpos(strtr($producto["descripciontipoproducto"], $unwanted_array), $a[5]) === false
+			&& strpos(strtr($producto["descripciontipoproducto"], $unwanted_array), $a[6]) === false
+			&& strpos(strtr($producto["descripciontipoproducto"], $unwanted_array), $a[7]) === false
         ) {
             continue;
         }
