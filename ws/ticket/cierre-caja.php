@@ -16,20 +16,20 @@ $unwanted_array = array('Š'=>'S', 'š'=>'s', 'Ž'=>'Z', 'ž'=>'z', 'À'=>'A', '
                             'è'=>'e', 'é'=>'e', 'ê'=>'e', 'ë'=>'e', 'ì'=>'i', 'í'=>'i', 'î'=>'i', 'ï'=>'i', 'ð'=>'o', 'ñ'=>'n', 'ò'=>'o', 'ó'=>'o', 'ô'=>'o', 'õ'=>'o',
                             'ö'=>'o', 'ø'=>'o', 'ù'=>'u', 'ú'=>'u', 'û'=>'u', 'ý'=>'y', 'þ'=>'b', 'ÿ'=>'y' );
  
-/*
-	Este ejemplo imprime un
-	ticket de venta desde una impresora térmica
-*/
- 
- 
-/*
-	Una pequeña clase para
-	trabajar mejor con
-	los productos
-	Nota: esta clase no es requerida, puedes
-	imprimir usando puro texto de la forma
-	que tú quieras
-*/
+
+// borrar imagenes de qr de FE
+$directorio = './qr/';
+if ($gestor = opendir($directorio)) {
+    while (false !== ($archivo = readdir($gestor))) {
+        if ($archivo != "." && $archivo != "..") {
+            unlink($directorio . $archivo);
+        }
+    }
+    closedir($gestor);
+} else {
+    echo 'no';
+}
+
 require_once("../conexion.php");
 require_once("../encrypted.php");
 $conexion = new Conexion();
@@ -257,5 +257,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         la conexión con la impresora. Recuerda incluir esto al final de todos los archivos
     */
     $printer->close();
+
 }
 ?>

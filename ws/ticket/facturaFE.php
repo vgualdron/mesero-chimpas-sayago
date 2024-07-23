@@ -27,6 +27,8 @@ date_default_timezone_set('America/Bogota');
 */
 require_once("../conexion.php");
 require_once("../encrypted.php");
+require_once("../pedido/apiAlegra.php");
+$apiAlegra = new ApiAlegra();
 
 $frm = json_decode(file_get_contents('php://input'), true);
 
@@ -43,13 +45,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 
     if ($numeroMesa >= 25 && $numeroMesa <= 50) {
-        printInvoice($frm, 'SEGUNDO-PISO-PRINT', $tienePropina);
+        printInvoice($frm, 'SEGUNDO-PISO-PRINT', $tienePropina, $apiAlegra);
     } else {
-        printInvoice($frm, 'POS-80', $tienePropina);
+        printInvoice($frm, 'POS-80', $tienePropina, $apiAlegra);
     }
 }
 
-function printInvoice($frm, $printerName, $tienePropina = false) {
+function printInvoice($frm, $printerName, $tienePropina = false, $apiAlegra) {
     $conexion = new Conexion();
     $conexion ->query("SET NAMES 'utf8';");
 
@@ -68,10 +70,10 @@ function printInvoice($frm, $printerName, $tienePropina = false) {
     $printer->setJustification(Printer::JUSTIFY_CENTER);
     $idpena = openCypher('decrypt', $frm['token']);
     $tipoPago = $frm['tipopago'];
-    $fechaFactura = $frm['fecha'];
 
     $use = $conexion->prepare(" select * from pinchetas_general.parametroano paan
-                    where paan.paan_descripcion = ? ; "); 						
+                    where paan.paan_descripcion = ? ; ");
+
     $use->bindValue(1, 'NOMBRE_EMPRESA');
     $use ->execute();
     $row = $use->fetch();
@@ -84,7 +86,6 @@ function printInvoice($frm, $printerName, $tienePropina = false) {
     $use ->execute();
     $row = $use->fetch();
     $nitEmpresa = $row['paan_valor'];
-
 
     $use = $conexion->prepare(" select * from pinchetas_general.parametroano paan
                     where paan.paan_descripcion = ? ; "); 						
@@ -100,33 +101,6 @@ function printInvoice($frm, $printerName, $tienePropina = false) {
     $row = $use->fetch();
     $telefonoEmpresa = $row['paan_valor'];
 
-    $use = $conexion->prepare(" select * from pinchetas_general.parametroano paan
-                    where paan.paan_descripcion = ? ; "); 						
-    $use->bindValue(1, 'RESOLUCION_FACTURA');
-    $use ->execute();
-    $row = $use->fetch();
-    $resolucionEmpresa = $row['paan_valor'];
-
-    $use = $conexion->prepare(" select * from pinchetas_general.parametroano paan
-                    where paan.paan_descripcion = ? ; "); 						
-    $use->bindValue(1, 'RANGO_FACTURACION');
-    $use ->execute();
-    $row = $use->fetch();
-    $rangoAutorizadoFacturas = $row['paan_valor'];
-
-    $use = $conexion->prepare(" select * from pinchetas_general.parametroano paan
-                    where paan.paan_descripcion = ? ; "); 						
-    $use->bindValue(1, 'PREFIJO_CAJA');
-    $use ->execute();
-    $row = $use->fetch();
-    $prefijoFactura = $row['paan_valor'];
-
-    $use = $conexion->prepare(" SELECT * FROM pinchetas_general.personanatural pena
-                                WHERE pena.pege_id = ?; "); 						
-    $use->bindValue(1, $idpena);
-    $use ->execute();
-    $row = $use->fetch();
-    $nombreCajero = $row['pena_primernombre']. " " . $row['pena_primerapellido'];
 
     $fecha = date("Y-m-d");
     $hora = date("H:i:s");
@@ -134,12 +108,29 @@ function printInvoice($frm, $printerName, $tienePropina = false) {
     $id = $frm['id'];
     $productos = $frm['productos'];
     $mesa = $frm['mesa'];
-	$mesero = strtoupper($frm['mesero']);
-	// $prefijoFactura = $frm['prefijofactura'];
-	$numeroFactura = $frm['numerofactura'];
-	$nombreCliente = $frm['nombrecliente'];
-	$direccionCliente = $frm['direccioncliente'];
-	$telefonoCliente = $frm['telefonocliente'];
+
+    $use = $conexion->prepare(" select * from pinchetas_restaurante.pedido pedi
+        where pedi.pedi_id = ? ; "); 						
+    $use->bindValue(1, $id);
+    $use ->execute();
+    $row = $use->fetch();
+    $idAle = $row['pedi_idAlegra'];
+    $cufe = $row['pedi_cufe'];
+    $qr = $row['pedi_qr'];
+
+    $invoice = $apiAlegra->getInvoice($idAle);
+    echo json_encode($invoice);
+    
+    $fechaFactura = $invoice['datetime'];
+    $resolucion = $invoice["numberTemplate"];
+    $resolucionEmpresa = $resolucion["text"];
+    $numeroFactura = $resolucion['fullNumber'];
+
+    $cliente = $invoice["client"];
+    $nombreCliente = $cliente['name'];
+    $identificationCliente = $cliente['identification'];
+    $emailCliente = $cliente['email'];
+	$direccionCliente = $cliente['address']['address'];
 
     /*
         Intentaremos cargar e imprimir
@@ -148,7 +139,7 @@ function printInvoice($frm, $printerName, $tienePropina = false) {
     try{
         $logo = EscposImage::load("logo_banner_menu_minimized.jpg", false);
         $printer->bitImage($logo);
-    }catch(Exception $e){/*No hacemos nada si hay error*/}
+    } catch(Exception $e){/*No hacemos nada si hay error*/}
 
     /*
         Ahora vamos a imprimir un encabezado
@@ -166,21 +157,15 @@ function printInvoice($frm, $printerName, $tienePropina = false) {
     $printer->setTextSize(1,1);
     $printer->setJustification(Printer::JUSTIFY_LEFT);
     if (!empty($numeroFactura)) {
-        $printer->text("FACTURA POS No.  : " . $prefijoFactura. " " . $numeroFactura . "\n");
+        $printer->text("FACTURA ELECTRÓNICA DE VENTA No.  : " . $numeroFactura . "\n");
     }
-    
-    if (empty($fechaFactura)) {
-        $printer->text("FECHA     : " . $fecha. " HORA " . $hora . "\n");
-    } else {
-        $printer->text("FECHA     : " . $fechaFactura. "\n");
-    }
-    
-    $printer->text("CAJA      : " . $prefijoFactura . " 1\n");
+   
+    $printer->text("FECHA     : " . $fechaFactura. "\n");
     $printer->text("MESA      : " . $mesa['descripcion'] . "\n");
-    $printer->text("CAJERO    : " . $nombreCajero . "\n");
     if (!empty($nombreCliente)) {
         $printer->text("CLIENTE   : " . $nombreCliente . "\n");
-        $printer->text("TELEFONO  : " . $telefonoCliente . "\n");
+        $printer->text("IDENTIFICACIÓN   : " . $identificationCliente . "\n");
+        $printer->text("CORREO  : " . $emailCliente . "\n");
         $printer->text("DIRECCION : " . $direccionCliente . "\n");
     } else {
         $printer->text("CLIENTE   : VARIOS\n");
@@ -193,7 +178,7 @@ function printInvoice($frm, $printerName, $tienePropina = false) {
     $printer->selectPrintMode();
     $printer->text("------------------------------------------------\n");
     $printer->setEmphasis(true);
-    $printer->text("CANT                DESCRIPCION           PRECIO\n");
+    $printer->text("CANT  COD           DESCRIPCION           PRECIO\n");
     $printer->selectPrintMode();
     $printer->text("------------------------------------------------\n");
     
@@ -217,10 +202,10 @@ function printInvoice($frm, $printerName, $tienePropina = false) {
         }
 
         if (!empty($producto["descripcionproducto2"])) {
-            $printer->text(substr($producto["cantidadproducto"],0,22). " -".strtr($textoPrefijo." ".$producto["descripcionproducto"], $unwanted_array ). "\n");
+            $printer->text(substr($producto["cantidadproducto"],0,22). " - ".substr($producto["idproducto"],0,22). " - ".strtr($textoPrefijo." ".$producto["descripcionproducto"], $unwanted_array ). "\n");
             $printer->text("   ".strtr( $textoPrefijo." ".$producto["descripcionproducto2"], $unwanted_array ). "\n");
         } else {
-            $printer->text(substr($producto["cantidadproducto"],0,22). " - ".strtr( $textoPrefijo." ".$producto["descripcionproducto"], $unwanted_array ). "\n");
+            $printer->text(substr($producto["cantidadproducto"],0,22). " - ".substr($producto["idproducto"],0,22). " - ".strtr( $textoPrefijo." ".$producto["descripcionproducto"], $unwanted_array ). "\n");
         }
         
 
@@ -261,12 +246,12 @@ function printInvoice($frm, $printerName, $tienePropina = false) {
     
     $printer->text("    BASE      %          IVA      %       ICO   \n");
     
-	
+
     $porcentajeIco = 1.08;
     $ico = $total - ($total / $porcentajeIco);
     $iva = 0;
     $base = ($total / $porcentajeIco);
-
+    
     $printer->text(number_format($base, 2, ',', '.') ."    0 " . "         0.00    " . "  8   " . number_format($ico, 2, ',', '.') . "\n");
     $printer->text("-------------  ----------------  ---------------\n");
     $printer->setEmphasis(true);
@@ -281,14 +266,25 @@ function printInvoice($frm, $printerName, $tienePropina = false) {
     $printer->setJustification(Printer::JUSTIFY_CENTER);
     $printer->setEmphasis(true);
     $printer->text("\n");
-    $printer->text($resolucionEmpresa . " \n Vigencia 12 meses \n");
-    $printer->text("" . $rangoAutorizadoFacturas . "\n");
+    $printer->text($resolucionEmpresa . " \n");
     $printer->setEmphasis(false);
+
+    try {
+        // $logo = EscposImage::load("./qr/$id.png", false);
+        $logo = EscposImage::load("./qr/$id.png", true, ['native','gd', 'imagick']);
+        $printer->bitImage($logo);
+    } catch (Exception $e) {
+        echo $e->getMessage ();
+        /*No hacemos nada si hay error*/
+    }
+
+    $printer->setJustification(Printer::JUSTIFY_LEFT);
+    $printer->text("CUFE: $cufe"." \n");
 
     $printer->text("------------------------------------------------\n");
 
-
     $printer->text("Estamos para servirle. Gracias por su compra.\n");
+    $printer->text("                 Alegra S.A.S.               \n");
 
 	/*
         Ahora vamos a imprimirla encuesta
