@@ -291,6 +291,7 @@ class ApiAlegra extends PDO {
 			"warehouse" => $data["warehouse"],
 			"paymentForm" => $data["paymentForm"],
         	"paymentMethod" => $data["paymentMethod"] == 'EFECTIVO' ? 'CASH' : 'CREDIT_CARD',
+			"numberTemplate" => $data["numberTemplate"],
 			"stamp" => array(
 				"generateStamp" => true
 			)
